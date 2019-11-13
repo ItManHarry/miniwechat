@@ -205,14 +205,67 @@ Page({
 
 ```
 	<!--wxml-->
-	<view wx:for="{{array}}"> {{item}} </view>
+	<view wx:for="{{array}}">
+	  {{index}}: {{item.message}}
+	</view>
 	// page.js
 	Page({
 	  data: {
-		 array: [1, 2, 3, 4, 5]
+		array: [{
+		  message: 'foo',
+		}, {
+		  message: 'bar'
+		}]
 	  }
 	})
 ```
+	使用 wx:for-item 可以指定数组当前元素的变量名，
+	使用 wx:for-index 可以指定数组当前下标的变量名：
+
+```
+	<!--wxml-->
+	<view wx:for="{{array}}" wx:for-index = "i" wx:for-item = "it">
+	  {{i}}: {{it.message}}
+	</view>
+	// page.js
+	Page({
+	  data: {
+		array: [{
+		  message: 'foo',
+		}, {
+		  message: 'bar'
+		}]
+	  }
+	})
+```
+
+	wx:for 也可以嵌套，下边是一个九九乘法表
+	
+```
+<view wx:for="{{[1, 2, 3, 4, 5, 6, 7, 8, 9]}}" wx:for-item="i">
+  <view wx:for="{{[1, 2, 3, 4, 5, 6, 7, 8, 9]}}" wx:for-item="j">
+    <view wx:if="{{i <= j}}">
+      {{i}} * {{j}} = {{i * j}}
+    </view>
+  </view>
+</view>
+```
+
+	block wx:for
+	类似 block wx:if，也可以将 wx:for 用在<block/>标签上，以渲染一个包含多节点的结构块。例如：
+```
+<block wx:for="{{[1, 2, 3]}}">
+  <view> {{index}}: </view>
+  <view> {{item}} </view>
+</block>
+```
+
+wx:key
+如果列表中项目的位置会动态改变或者有新的项目添加到列表中，并且希望列表中的项目保持自己的特征和状态（如 input 中的输入内容，switch 的选中状态），需要使用 wx:key 来指定列表中项目的唯一的标识符。
+wx:key 的值以两种形式提供
+字符串，代表在 for 循环的 array 中 item 的某个 property，该 property 的值需要是列表中唯一的字符串或数字，且不能动态改变。
+保留关键字 *this 代表在 for 循环中的 item 本身，这种表示需要 item 本身是一个唯一的字符串或者数字，如：
+当数据改变触发渲染层重新渲染的时候，会校正带有 key 的组件，框架会确保他们被重新排序，而不是重新创建，以确保使组件保持自身的状态，并且提高列表渲染时的效率。
 
 - 条件渲染
 
@@ -252,4 +305,56 @@ Page({
 	  }
 	})
 	
+```
+
+- 引用
+
+	WXML 提供两种文件引用方式import和include。
+	- import
+		import可以在该文件中使用目标文件定义的template，如：
+		在 item.wxml 中定义了一个叫item的template：
+```		
+	<!-- item.wxml -->
+	<template name="item">
+	 <text>{{text}}</text>
+	</template>
+```
+	在 index.wxml 中引用了 item.wxml，就可以使用item模板：
+```
+<import src="item.wxml"/>
+<template is="item" data="{{text: 'forbar'}}"/>
+```
+
+	import 的作用域
+	import 有作用域的概念，即只会 import 目标文件中定义的 template，而不会 import 目标文件 import 的 template。
+	如：C import B，B import A，在C中可以使用B定义的template，在B中可以使用A定义的template，但是C不能使用A定义的template。
+	
+```
+<!-- A.wxml -->
+<template name="A">
+  <text> A template </text>
+</template>
+<!-- B.wxml -->
+<import src="a.wxml"/>
+<template name="B">
+  <text> B template </text>
+</template>
+<!-- C.wxml -->
+<import src="b.wxml"/>
+<template is="A"/>  <!-- Error! Can not use tempalte when not import A. -->
+<template is="B"/>
+```
+
+	- include
+	include 可以将目标文件除了 <template/> <wxs/> 外的整个代码引入，相当于是拷贝到 include 位置，如：
+	
+```
+<!-- index.wxml -->
+<include src="header.wxml"/>
+<view> body </view>
+<include src="footer.wxml"/>
+<!-- header.wxml -->
+<view> header </view>
+<!-- footer.wxml -->
+<view> footer </view>
 ```
